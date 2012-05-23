@@ -95,13 +95,17 @@ done
 
 hset xorglibXtst depends "xorglibXext"
 
+configure-xorglibICE() {
+	configure-generic --disable-ipv6
+}
+
 # stupid documentation breaks build
 configure-xorglibXfont() {
 	configure-generic --without-xmlto --without-fop
 }
 
 configure-xorglibXt() {
-	configure-generic
+	configure-generic-local
 	sed -i -e "s|^CFLAGS = .*|CFLAGS =|g" util/Makefile
 }
 
@@ -160,7 +164,6 @@ configure-libmesadrm-local() {
 	aclocal && libtoolize --copy --force --automake #&& automake --add-missing && autoreconf --force
 	autoreconf --install --force
 	configure-generic-local \
-		--enable-nouveau-experimental-api \
 		--with-kernel-source ../linux/
 }
 configure-libmesadrm() {
@@ -170,8 +173,8 @@ configure-libmesadrm() {
 # http://cgit.freedesktop.org/mesa/mesa/
 PACKAGES+=" libmesa"
 #hset libmesa url "ftp://ftp.freedesktop.org/pub/mesa/7.7.1/MesaLib-7.7.1.tar.bz2"
-hset libmesa url "http://cgit.freedesktop.org/mesa/mesa/snapshot/mesa-7.9.2.tar.gz"
-hset libmesa depends "libtalloc libmesadrm xorglibX11"
+hset libmesa url "http://cgit.freedesktop.org/mesa/mesa/snapshot/mesa-7.11.2.tar.gz"
+hset libmesa depends "libtalloc xorglibX11"
 
 hostcheck-libmesa() {
 	local py="libxml2"
@@ -181,17 +184,21 @@ hostcheck-libmesa() {
 	}
 }
 
-configure-libmesa-local() {
+configure-libmesa() {
 	export X11_LIBS="" # needs that otherwise the config/compile fails
 	configure-generic-local \
-		--with-dri-drivers="swrast" \
 		--disable-gallium \
 		--without-demos
+
+        echo "Fixing broken newlocales"
+	 sed -i -e 's|#if defined(_GNU_SOURCE) && !defined(__CYGWIN__) && !defined(__FreeBSD__)|#if defined(__BROKEN__)|g' src/glsl/strtod.c
+	 sed -i -e 's|#if defined(_GNU_SOURCE) && !defined(__CYGWIN__) && !defined(__FreeBSD__)|#if defined(__BROKEN__)|g' src/mesa/main/imports.c
+        sleep 5
 }
 
-configure-libmesa() {
-	configure configure-libmesa-local
-}
+#configure-libmesa() {
+#	configure configure-libmesa-local
+#}
 
 compile-libmesa() {
 #	export LDFLAGS="$LDFLAGS_RLINK"
@@ -202,15 +209,21 @@ compile-libmesa() {
 PACKAGES+=" libsha1"
 hset libsha1 url "git!git://github.com/dottedmag/libsha1.git#libsha1-git.tar.bz2"
 
+configure-libsha1() {
+	aclocal && libtoolize --copy --force --automake #&& automake --add-missing && autoreconf --force
+        autoreconf --install --force
+        configure-generic-local
+}
+
 PACKAGES+=" xorgserver"
 #hset xorgserver url "git!git://anongit.freedesktop.org/xorg/xserver#xorgserver-git.tar.bz2"
 hset xorgserver url $(xorg_module_geturl "xserver" "xorg-server")
 hset xorgserver depends \
-	"busybox libsha1 xorglibX11 xorgfontutil \
+	"busybox xorglibX11 xorgfontutil \
 	xkbcomp xtrans \
 	$XORG_LIBS \
 	xorgfontadobe \
-	libmesa openssl"
+	openssl libfreetype libfontconfig libpixman glproto"
 
 configure-xorgserver-local() {
 	export LDFLAGS="$LDFLAGS_RLINK"
@@ -220,9 +233,10 @@ configure-xorgserver-local() {
 		--disable-dmx --enable-xvfb --disable-xnest \
 		--disable-dbus \
 		--enable-xorg --disable-xnest \
-		--with-sha1=libsha1 \
-		--enable-xfbdev \
-		--with-mesa-source="$BUILD/libmesa"
+		--enable-kdrive --enable-xfbdev --disable-xephyr \
+                --disable-record \
+                --disable-glx --disable-dri --disable-xprint --disable-drm \
+                --disable-libdrm
 	export LDFLAGS="$LDFLAGS_BASE"
 }
 configure-xorgserver() {

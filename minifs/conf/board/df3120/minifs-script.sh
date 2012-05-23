@@ -21,15 +21,16 @@ board_set_versions() {
 board_prepare() {
 	TARGET_PACKAGES+=" plftool"
 	TARGET_PACKAGES+=" strace gdbserver picocom uboot"
-	TARGET_PACKAGES+=" bluez cwiid libsdl"
+	TARGET_PACKAGES+=" bluez btscanner libsdl"
 	TARGET_PACKAGES+=" sdlplasma sdlvoxel"
-	TARGET_PACKAGES+=" kobodeluxe"
-	TARGET_PACKAGES+=" sdldoom"
+#	TARGET_PACKAGES+=" kobodeluxe"
+#	TARGET_PACKAGES+=" sdldoom"
 	TARGET_PACKAGES+=" dropbear"
 	TARGET_PACKAGES+=" dispinfo"
 	TARGET_PACKAGES+=" disptest"
 	TARGET_PACKAGES+=" dispwrite"
 	TARGET_PACKAGES+=" disppic"
+        TARGET_PACKAGES+=" xorgserver xorgvideofbdev"
 	hset dbus deploy false
 }
 
